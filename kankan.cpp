@@ -3,6 +3,7 @@
 #include<vector>
 #include<cstdio>
 #include<conio.h>
+#include<iomanip>
 
 #define BACKSPACE 8 /* KeyCode of Backspace */
 
@@ -36,6 +37,7 @@ public:
 void MAKE_FILE(string);
 void ERROR_AGAIN_INPUT(void);
 void SAVE(vector<vector<CNT> >, CNT, string);
+string getDatetimeStr(void);
 
 int main() {
 	unsigned long start_lvl = 0;
@@ -107,6 +109,20 @@ int main() {
 	}
 	fclose(fp);
 
+	/* Checking delete or not */
+	cout << "\nRenew this Data? [Y or N]" << endl;
+	cin >> check;
+	if (check == 'y' || check == 'Y') {
+		cout << "Really ? [Y or N]" << endl;
+		cin >> check;
+		if (check == 'y' || check == 'Y') {
+			MAKE_FILE(FName);
+
+			cout << "Succecc DELETE" << endl;
+			cout << "Check the Data" << endl;
+		}
+	}
+
 	/* Checking Level when you start */
 	cout << "\nNow Level is ?" << endl;
 	do {
@@ -116,13 +132,12 @@ int main() {
 
 	n.renew(start_lvl);
 
-	/* Checking whether use high-mithril or not */
+	/* Checking whether use Item or not */
 	cout << "\nDo you use any Item ?\n" << endl;
 	do {
 		cout << "if use High-Mithril -> input M" << endl;
 		cout << "if use HIhiyarokane -> input H" << endl;
-		cout << "if   Don't   use    -> input N" << endl;
-		cout << "if delete this data -> input D\n" << endl;
+		cout << "if   Don't   use    -> input N\n" << endl;
 
 		cin >> check;
 
@@ -134,18 +149,6 @@ int main() {
 		}
 		else if (check == 'n' || check == 'N') {
 			start_lvl = 0;
-		}
-		/* DELETE */
-		else if (check == 'd' || check == 'D') {
-			cout << "DELETE DATA ? [Y or N]" << endl;
-			cin >> check;
-			if (check == 'y' || check == 'Y') {
-				MAKE_FILE(FName);
-
-				cout << "Succecc DELETE" << endl;
-				cout << "Check the Data" << endl;
-				return 0;
-			}
 		}
 		else {
 			check = '\0';
@@ -161,7 +164,6 @@ int main() {
 		<< "Failure ( 3 down ) -> 3\n"
 		<< "Modificate         -> Back space\n"
 		<< "END -> @\n" << endl;
-
 	
 	do {/* Count */
 		check = getch();
@@ -172,7 +174,7 @@ int main() {
 			n.renew(start_lvl);
 		}
 
-		/* inut */
+		/* input */
 		if (check == '@') {
 			break;
 		}
@@ -194,8 +196,10 @@ int main() {
 			cout << n.val() << endl;
 		}
 		else if (check == BACKSPACE) {/* misstake */
-			cout << " : " << n.val() << " -> ";
-			times.down(1);
+			cout << "Modificate : " << n.val() << " -> ";
+			if (times.val() > 0) {
+				times.down(1);
+			}
 			cnt[n.val()][bui].down(1);
 			n.renew(bun);
 			cout << n.val() << endl;
@@ -218,6 +222,23 @@ int main() {
 			}
 			else {/* others */
 				ERROR_AGAIN_INPUT();
+			}
+		}
+		/* Count check */
+		for (int i = 0; i < MAX_LEVEL; i++) {
+			for (int j = 0; j < MAX_NUM; j++) {
+				if (cnt[i][j].val() == ULONG_MAX) {
+					check = '@';
+				}
+			}
+			if (check == '@') {
+				cerr << "\nWe can't count any more." << endl;
+				cerr << "Make new File and Take Backup" << endl;
+
+				SAVE(cnt, times, FName + getDatetimeStr());
+				fclose(fp);
+				MAKE_FILE(FName);
+				fp = fopen(FName.c_str(), "r+");
 			}
 		}
 		if (times.val() % 10 == 1) {
@@ -253,16 +274,14 @@ void SAVE(vector<vector<CNT> >cnt,CNT times, string FName) {
 		}
 		else {
 			for (int j = 0; j < MAX_NUM; j++) {
-				P[i][j] = cnt[i][j].val();
-				P[i][j] *= 100 / SUM;
+				P[i][j] = cnt[i][j].val() * 100 / SUM;
 			}
 		}
 	}
 
 	cout << "Now Outputing Data" << endl;
 
-	const char* fname = FName.c_str();
-	FILE* fp = fopen(fname, "r+");
+	FILE* fp = fopen(FName.c_str(), "r+");
 	if (fp==NULL) {
 		cerr << "Failure Open FILE" << endl;
 		exit(1);
@@ -303,4 +322,19 @@ void MAKE_FILE(string FName) {
 		fprintf(fp, "0\n");
 	}
 	fclose(fp);
+}
+
+string getDatetimeStr(void) {
+	time_t t = time(nullptr);
+	const tm* localTime = localtime(&t);
+	std::stringstream s;
+	s << localTime->tm_year + 1900;
+	// setw(),setfill()‚Å0‹l‚ß
+	s << setw(2) << setfill('0') << localTime->tm_mon + 1;
+	s << setw(2) << setfill('0') << localTime->tm_mday;
+	s << setw(2) << setfill('0') << localTime->tm_hour;
+	s << setw(2) << setfill('0') << localTime->tm_min;
+	s << setw(2) << setfill('0') << localTime->tm_sec;
+	// std::string‚É‚µ‚Ä’l‚ð•Ô‚·
+	return s.str();
 }
